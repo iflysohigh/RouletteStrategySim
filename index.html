@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Simulator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .result-container {
+            margin-top: 20px;
+        }
+        .warning {
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Roulette Simulator</h1>
+        <form id="rouletteForm">
+            <div class="form-group">
+                <label for="rouletteType">Choose Roulette Type:</label>
+                <select class="form-control" id="rouletteType" name="rouletteType">
+                    <option value="American">American</option>
+                    <option value="European">European</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="betAmount">Starting Bet Amount ($):</label>
+                <input type="number" class="form-control" id="betAmount" name="betAmount" required>
+            </div>
+
+            <div class="form-group">
+                <label for="numRolls">Number of Roulette Rolls:</label>
+                <input type="number" class="form-control" id="numRolls" name="numRolls" required>
+            </div>
+
+            <div class="form-group">
+                <label>Select Sets of 12:</label><br>
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="first12" name="setsOf12" value="1st12">
+                    <label class="form-check-label" for="first12">1st 12</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="second12" name="setsOf12" value="2nd12">
+                    <label class="form-check-label" for="second12">2nd 12</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="third12" name="setsOf12" value="3rd12">
+                    <label class="form-check-label" for="third12">3rd 12</label>
+                </div>
+            </div>
+
+            <div class="warning" id="warningMessage">
+                Please select exactly two sets of 12.
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Simulate</button>
+        </form>
+
+        <div class="result-container">
+            <h2 class="text-center">Simulation Results</h2>
+            <div id="results" class="border p-3"></div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('rouletteForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const selectedSets = Array.from(formData.getAll('setsOf12'));
+            if (selectedSets.length !== 2) {
+                document.getElementById('warningMessage').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('warningMessage').style.display = 'none';
+            }
+
+            const data = {
+                rouletteType: formData.get('rouletteType'),
+                betAmount: parseFloat(formData.get('betAmount')),
+                numRolls: parseInt(formData.get('numRolls')),
+                setsOf12: selectedSets
+            };
+
+            const response = await fetch('/simulate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const results = await response.json();
+            document.getElementById('results').innerText = JSON.stringify(results, null, 2);
+        });
+    </script>
+</body>
+</html>
