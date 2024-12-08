@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import random
 
 app = Flask(__name__)
+CORS(app)
 
 def simulate_roulette(roulette_type, bet_amount, num_rolls, sets_of_12):
     results = []
@@ -17,7 +19,7 @@ def simulate_roulette(roulette_type, bet_amount, num_rolls, sets_of_12):
         round_result = -1 * bets[0] - bets[1]  # The initial result is losing both
         old_bets = bets[:]  # We use this as a temporary copy of the initial bets for this round
 
-        roll = random.choice(slots)
+        roll = random.randint(slots)
         if isinstance(roll, str):
             roll = 0 if roll == "00" else 37  # Handling 00 as 0 and keeping unique identifier for 0
 
@@ -66,15 +68,43 @@ def simulate_roulette(roulette_type, bet_amount, num_rolls, sets_of_12):
 
     return results
 
+def calculate_win_rate(roulette_type, bet_amount, num_rolls, sets_of_12):
+    win_count = 0
+    revenue = 0
+    for x in range(500):
+        revenue_round = simulate_roulette(roulette_type, bet_amount, num_rolls, sets_of_12)[-1]['total_revenue']
+        revenue += revenue_round
+        if (revenue_round > 0):
+            win_count += 1
+    win_percentage = win_count / 500
+    revenue_average = revenue / 500
+
+    return "Win Percentage: " + str(win_percentage) + "\n Average Revenue per Round: " + str(revenue_average)
+
+# result = []
+# for i in range(300):
+#     result.append(simulate_roulette("American", 1, 50, ['2nd12', '3rd12']))
+
+# total_winnings = 0
+# for x in result:
+#     total_winnings += x[-1]['total_revenue']
+
+# print("Average Win: " + str(total_winnings / 50))
+
+######################################################################
+
 @app.route('/simulate', methods=['POST'])
 def simulate():
     data = request.json
+
+    print(f"Received data: {data}")
+
     roulette_type = data.get('rouletteType')
     bet_amount = data.get('betAmount')
     num_rolls = data.get('numRolls')
     sets_of_12 = data.get('setsOf12')
 
-    results = simulate_roulette(roulette_type, bet_amount, num_rolls, sets_of_12)
+    results = calculate_win_rate(roulette_type, bet_amount, num_rolls, sets_of_12)
     return jsonify(results)
 
 if __name__ == '__main__':
